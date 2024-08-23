@@ -1,0 +1,19 @@
+#!/bin/bash
+
+
+
+source file_utils
+output_dir=$2
+
+
+function onFileVisit(){
+	echo $1 #"$(resolveRelativePath $1) -> $output_dir/$(getFileName $1).jpg"
+	#ffmpeg -ss 00:00:01.00 -i $input -vf 'scale=120:120:force_original_aspect_ratio=decrease' -vframes 1 "$output_dir/$(getFileName $1).jpg"
+}
+
+function onDirVisit(){
+	echo $1
+	iterateOverFiles $1
+}
+
+iterateOverDirs $1

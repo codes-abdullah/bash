@@ -1,0 +1,38 @@
+#!/bin/bash
+
+
+
+function convert(){
+	file=$1	
+	if [[ -f $file ]]; then
+		echo "converting ${file}"	
+		fullName=$(basename -- "$file")
+		ext="${fullName##*.}"
+		name="${fullName%.*}"
+		if [[  $ext == "srt" ]]; then				
+			iconv -f WINDOWS-1256 -t UTF-8//TRANSLIT "${fullName}" -o "${name}-UTF8.srt"
+		fi
+	fi
+}
+
+
+############# loop over arguments
+i=1;
+j=$#;
+while [ $i -le $j ] 
+do
+		if [[ -d $1 ]]; then
+		for file in $1/* ; do
+			convert $file
+		done
+		elif [[ -f $1 ]]; then 	
+			convert $1
+		fi    
+    i=$((i + 1));
+    shift 1;
+done
+
+
+
+
+

@@ -1,0 +1,6 @@
+#!/bin/bash
+
+str="this is class java of java class.java"
+p="java^"
+r="c++"
+echo "${str//java/c++}"

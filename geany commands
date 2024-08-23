@@ -1,0 +1,10 @@
+
+
+compile
+javac -g -cp .. %f
+
+run
+java -cp .. ${PWD##*/}.%e
+
+decompile:
+javac -g -cp .. %f && JTMP=`mktemp /tmp/%e.class_XXXXXX` && javap -v -p %e > $JTMP && geany $JTMP

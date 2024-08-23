@@ -1,0 +1,131 @@
+#!/usr/bin/bash
+
+#$1 source dir
+#$2 type of share [smb/ftp/http]
+#check parents access permissions
+#why we can't execute as root inside?
+
+if [[ $# -ne 2 ]]; then
+	echo 'ERR: Requires 2 args, $1 for dir and $2 for service'
+	exit 1
+elif [[ ! -d $1 ]]; then
+	echo "ERR: Invalid dir path or not exists"
+	exit 1
+#elif [[ `id -u` -ne 0 ]]; then
+	#echo "ERR: This script requires root access, please run again with sudo privileges"
+	#exit 1
+elif [[ ! -f $LOCAL_BASH/file_utils ]]; then
+	echo "ERR: file_utils is required, but was not exists in path: $LOCAL_BASH/file_utils"
+	exit 1
+fi
+
+
+source $LOCAL_BASH/file_utils
+
+smb_conf=/etc/samba/smb.conf
+path_to_share=`resolveRelativePath "$1"`
+path_to_share=`echo "$path_to_share" | tr -s '/'`
+dir_name=`basename "$path_to_share"`
+
+g=("owner" "group" "others")
+IFS="/" read -r -a arr <<< "$path_to_share"
+tmp=
+for a in "${arr[@]}"; do
+	tmp+="$a/"
+	pp=`stat -c "%a %n" "$tmp"`
+	for i in {0..2}; do 
+		if [[ $i -eq 1 ]]; then continue; fi
+		octal=${pp:$i:1}
+		if [[ "$octal" -ne 7 && "$octal" -ne 5 ]]; then
+			echo "WAR: The '${g[i]}' octal permission '$octal' is invalid on the path-hierarchy of: $pp"
+			echo "WAR: The '${g[i]}' permission should be either '7' or '5' to gain path-hierarchy access"
+			echo "WAR: [Yes] to continue, [No] to abort, [C] to change permissions on current dir only, and [R] to change permissions on the entire path-hierarchy from ${pp:0:3} to 755"
+			while read -e yn; do
+			case $yn in
+				[Yy]es|[Yy]) break;;
+				[Nn]o|[Nn]) 
+					echo "LOG: Aborting.."; 
+					exit 0
+				;;
+				[Cc]) chmod 755 "$tmp"; break;;
+				[Rr]) chmod -R 755 "$tmp"; break;;
+				*) 
+					echo "ERR: Unknown command, please try again"
+					sleep 1s
+					echo "LOG: Are you sure want to continue with above settings [yes/no]?"
+				;;
+			esac
+			done
+			
+		fi
+		
+	done
+done
+
+
+case $2 in
+	"smb")
+		grep -oE "\[$dir_name\]" $smb_conf
+		if [[ $? -eq 0 ]]; then
+			echo "ERR: The given path already exists in $smb_conf, aborting.."
+			exit 1
+		fi
+
+		echo "==================="
+		smb_share="[$dir_name]\n
+			comment = Simple Share of $dir_name\n
+			path = $1\n
+			browsable = yes\n
+			guest ok = yes\n
+			read only = yes\n" 		
+		echo -e $smb_share
+		echo "==================="
+		echo "LOG: Are you sure want to continue [yes/no]?"
+		while read -e yn; do
+		case $yn in
+			[Yy]es|[Yy]) break;;
+			[Nn]o|[Nn]) 
+				echo "LOG: Aborting.."; 
+				exit 0
+			;;			
+			*) 
+				echo "ERR: Unknown command, please try again"
+				sleep 1s
+				echo "LOG: Are you sure want to continue with above settings [yes/no]?"
+			;;
+		esac
+		done
+		
+		
+		if [[ ! -f "${smb_conf}_bkp" ]]; then
+			echo "LOG: Making backup for $smb_conf --> ${smb_conf}_bkp"
+			sudo cp /etc/samba/smb.conf /etc/samba/smb.conf_bkp
+		fi
+		
+		
+		tmp_d=
+		tmp="/tmp/share_dir/`date +%s`.sh"
+		echo $tmp
+		
+		#echo "LOG: Restarting services smbd.service and nmbd.service"
+		#sudo systemctl restart smbd.service nmbd.service
+		
+		echo "done"
+	;;
+	
+	"ftp")
+	
+	;;
+	
+	"http")
+	
+	;;
+	*) 
+	echo "ERR: $2 is unsupported service, aborting"
+	exit 1
+	;;
+esac
+
+    
+
+

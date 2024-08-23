@@ -1,0 +1,28 @@
+#!/usr/bin/bash
+
+if [[ $# -lt 1 ]]; then echo "no args passed"; exit 1; fi
+
+function sizeOfDir(){
+	
+}
+
+
+let total_size=0
+
+function sizeOf(){
+	for f in "$@"; do
+		echo "$f"
+		if [ -f $f ]; then
+			size=`wc -c $f`
+			let size=${size% *}
+			let total_size=$((total_size + size))
+		elif [ -d $f ];then
+			ehco "dir"
+		fi
+	done	
+}
+
+
+echo $total_size
+
+

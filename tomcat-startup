@@ -1,0 +1,26 @@
+#!/usr/bin/bash
+
+
+
+# trap ctrl-c and call ctrl_c()
+trap ctrl_c INT
+
+function ctrl_c() {
+		echo "#############################################"
+        echo "Trapped CTRL-C"
+        echo "shutting down tomcat..."
+        echo "#############################################"
+		cd $CATALINA_HOME/bin/        
+		./shutdown.sh		
+}
+
+cd $CATALINA_HOME/bin/
+
+
+
+#./startup.sh && xdg-open http://localhost:8080 && cd ../logs && gnome-terminal -- tail -f catalina.out
+$CATALINA_HOME
+./startup.sh && sleep 2s
+xdg-open http://localhost:8080 && cd ../logs && tail -f catalina.out
+
+

@@ -1,0 +1,20 @@
+#!/bin/bash
+
+
+source /home/abod/.local/bin/bash/string_utils
+
+function hexPicker(){
+	# rgb(70,42,42)
+	local rgb=$(zenity --color-selection)
+	let start=$(indexOf $rgb "(")
+	let end=$(indexOf $rgb ")")
+	# 70,42,42
+	bytes_str=$(substring $rgb $((start+1)) $end)
+	bytes_str2=${bytes_str//,/ }
+	echo "#"$(printf "%02X%02X%02X" ${*//','/' '} $bytes_str2)
+}
+
+#hexPicker | xclip -loops 0 -sel p -sel s -sel c
+hexPicker | xclip -selection clipboard
+
+

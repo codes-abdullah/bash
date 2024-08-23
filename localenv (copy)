@@ -1,0 +1,33 @@
+#!/bin/bash
+
+
+#=================
+DERBY_TEST=/home/abod/junk/derby/
+
+#================= exports
+export LOCAL_BIN=/home/abod/.local/bin
+export LOCAL_BASH=$LOCAL_BIN/bash/
+export SCALA_HOME=$LOCAL_BIN/scala/default
+export NODEJS_HOME=$LOCAL_BIN/nodejs/default
+export GRADLE_HOME=$LOCAL_BIN/gradle/default
+export MAVEN_HOME=$LOCAL_BIN/maven/default
+export GROOVY_HOME=$LOCAL_BIN/groovy/default
+export JAVA_HOME=$LOCAL_BIN/jdk/default
+export CATALINA_HOME=$LOCAL_BIN/tomcat/default
+export VISUALVM_HOME=$LOCAL_BIN/visualvm/default
+export BEANSHELL_HOME=$LOCAL_BIN/beanshell/default
+export ANT_HOME=$LOCAL_BIN/ant/default
+export DERBY_HOME=$LOCAL_BIN/derby/default
+export ADB_HOME=$LOCAL_BIN/android-sdk/platform-tools
+
+export PATH=$PATH:$JAVA_HOME/bin:$GRADLE_HOME/bin:$NODEJS_HOME/bin:$LOCAL_BIN/bash:$MAVEN_HOME/bin:$CATALINA_HOME:$JAVA_17_HOME/bin:$ANT_HOME/bin:$GROOVY_HOME/bin:$VISUALVM_HOME/bin:$BEANSHELL_HOME:$SCALA_HOME/bin:$ANT_HOME/bin:$DERBY_HOME/bin:$ADB_HOME
+
+source /etc/bash_completion.d/git-prompt
+#================= statics
+
+
+
+
+
+
+

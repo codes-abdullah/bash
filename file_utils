@@ -1,0 +1,203 @@
+#!/bin/bash
+
+
+
+
+function iterateOverFiles(){	
+	local targetDir=$1
+	local maxDepth=$2
+	local currentDepth=$3
+	if [[ ! $(type -t onFileVisit) == function ]]; then echo "onFileVisit function not defined, define it first"; exit 1; fi
+	if [ -z "$targetDir" ]; then echo "no target dir specified to iterate over it"; exit 1;fi
+	if [ -z "$currentDepth" ]; then local currentDepth=0;fi
+	if [ -z "$maxDepth" ]; then local maxDepth=$(((1<<31)-1)) ;fi
+	
+	local let currentDepth=$currentDepth
+	local let maxDepth=$maxDepth;
+	
+	for f in $1/*; do 		
+		#it may show error here, this will happen if script exists inside Templetes dir, no problems copy the code outside and it will work
+		if test -f "$f" ; then
+			local file=$f
+			onFileVisit "$file" $currentDepth
+		fi;
+	done;
+}
+
+
+
+
+
+function iterateOverDirs(){	
+	local targetDir=$1
+	local maxDepth=$2	
+	local currentDepth=$3
+	if [[ ! $(type -t onDirVisit) == function ]]; then echo "onDirVisit function not defined, define it first"; exit 1; fi
+	if [ -z "$targetDir" ]; then echo "no target dir specified to iterate over it"; exit 1;fi
+	if [ -z "$currentDepth" ]; then local currentDepth=0;fi
+	if [ -z "$maxDepth" ]; then local maxDepth=$(((1<<31)-1)) ;fi
+	
+	local let currentDepth=$currentDepth
+	local let maxDepth=$maxDepth;
+	
+	if [[ $currentDepth -le $maxDepth ]]; then	
+		for d in $1/*; do 		
+			#it may show error here, this will happen if script exists inside Templetes dir, no problems copy the code outside and it will work
+			if test -d "$d" ; then
+				local dir=$d
+				iterateOverDirs "$dir" $maxDepth $((currentDepth+1));
+				onDirVisit "$dir" $currentDepth
+			fi;
+		done;
+	fi
+}
+
+
+function iterateOverDirsAndFiles(){
+	local targetDir="$1"
+	local maxDepth=$2	
+	local currentDepth=$3
+	
+	
+	
+	if [[ ! $(type -t onDirVisit) == function ]]; then echo "onDirVisit function not defined, define it first"; exit 1; fi
+	if [[ ! $(type -t onFileVisit) == function ]]; then echo "onFileVisit function not defined, define it first"; exit 1; fi
+	
+	if [ -z "$targetDir" ]; then echo "no target dir specified to iterate over it"; exit 1;fi
+	if [ -z "$currentDepth" ]; then local currentDepth=0;fi
+	if [ -z "$maxDepth" ]; then local maxDepth=$(((1<<31)-1)) ;fi
+	
+	local let currentDepth=$currentDepth
+	local let maxDepth=$maxDepth;
+	
+	for x in $targetDir/*; do		
+		if test -f $x ; then
+			local file=$x;
+			onFileVisit $file $currentDepth
+		elif test -d $x ; then
+			local dir=$x;
+			iterateOverDirsAndFiles $dir $maxDepth $((currentDepth+1));			
+			onDirVisit $dir $currentDepth			
+		fi;
+	done;
+}
+
+
+resolveRelativePath() (
+    #If the path is a directory, we just need to 'cd' into it and print the new path.
+    if [ -d "$1" ]; then
+        cd "$1" || return 1
+        pwd
+    # If the path points to anything else, like a file or FIFO
+    elif [ -e "$1" ]; then
+        # Strip '/file' from '/dir/file'
+        # We only change the directory if the name doesn't match for the cases where
+        # we were passed something like 'file' without './'
+        if [ ! "${1%/*}" = "$1" ]; then
+            cd "${1%/*}" || return 1
+        fi
+        # Strip all leading slashes upto the filename
+        echo "$(pwd)/${1##*/}"
+    else
+        return 1 # Failure, neither file nor directory exists.
+    fi
+)
+
+
+
+function getFileName(){
+	local str="${1}"
+	echo "got:"
+	if test -z "${str}"; then echo "Error: no path provided"; exit 1; fi
+	local name=$(basename $str)
+	local name_only="${name%.*}"
+	echo "${name_only}"
+}
+
+
+function getFileExtension(){
+	local str=$1
+	if test -z $str; then echo "Error: no path provided"; exit 1; fi
+	local name=$(basename $str)
+	local extension_only=${name##*.}
+	echo $extension_only
+}
+
+
+function getFileNameWithExtension(){
+	local str=$1
+	if test -z $str; then echo "Error: no path provided"; exit 1; fi
+	echo $(basename $str)	
+}
+
+function getParent(){
+	local str=$1
+	if test -z $str; then echo "Error: no path provided"; exit 1; fi
+	echo $(dirname $str)
+}
+
+function getParentName(){
+	local str=$1
+	if test -z $str; then echo "Error: no path provided"; exit 1; fi
+	echo $(basename $(dirname $str))
+}
+
+
+function deleteDirsOnly(){
+	local targetDir=$1
+	if [ -z "${targetDir}" ]; then echo "no target dir specified to delete it's sub-dirs"; exit 1;fi
+	for d in $1/*; do
+		if test -d "${d}"; then echo "deleting ${d}"; rm -r "${d}"; fi
+	done
+}
+
+
+#Search for methods in given targetDir, prompt serial paths to choose what to delete
+function promptDeleteDirsOnly(){
+	unset -v arr1
+	local targetDir=$1
+	local targetDir=$(resolveRelativePath "${targetDir}")
+
+	if [ -z "${targetDir}" ]; then echo "no target dir specified to delete it's sub-dirs"; exit 1;fi
+	let i=0
+
+	echo "========================="
+	for d in $1/*; do		
+		local d=$(resolveRelativePath "${d}")
+		if test -d "${d}"; then echo "$i - ${d}"; local arr1[$i]="${d}"; let i=$((i+1)); fi
+	done	
+	echo "========================="
+
+	if [[ ${#arr1[@]} == 0 ]]; then 
+	echo "No sub-dirs found in $targetDir, escaping..."; 
+	else 
+		echo "[e]=escape, [a]=delete all, [dir-number]=delete single dir"
+		
+		read index
+		
+		if [[ "$index" == "e" ]]; then
+			echo -e "\n\nEscapping.."
+		elif [[ "$index" == "a" ]]; then
+			echo -e "\n\nDeleting all dirs in ${targetDir} ..."
+			deleteDirsOnly $targetDir
+		else 
+			if [[ $index -ge 0 && $index -lt ${#arr1[@]} ]]; then		
+				echo -e "\n\ndeleteing ${arr1[index]}"
+				rm -r "${arr1[index]}"
+				
+				echo -e "\n\ndelete more?[n/Y]"
+				read index
+				if [[ "$index" == "y" || "$index" == "Y" ]]; then 
+					promptDeleteDirsOnly "${targetDir}"
+				fi
+			else
+				echo -e "\n\nIndex out of range, please try again"
+				sleep 1
+				promptDeleteDirsOnly "${targetDir}"
+			fi		 
+		fi
+	fi;
+}
+
+
+

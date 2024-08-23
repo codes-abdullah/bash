@@ -1,0 +1,39 @@
+#!/usr/bin/bash
+
+
+source file_utils
+
+trap ctrl_c INT
+
+function ctrl_c() {
+		echo -e "\n\n##############"
+        echo "Trapped pid[$$] CTRL-C"
+        echo "shutting down derby-startup..."
+        echo -e "##############\n\n"
+
+	cd $DERBY_HOME/lib
+	java -jar ./derbyrun.jar server shutdown
+	
+	deleteDirsOnly .
+	
+	
+	
+	echo -e "\n\n[r=Reload, Enter=exit] ?"
+	read option
+	
+	if [[ $option == "r" ]]; then
+		echo "Reloading..."
+		#Don't spawn new process, start the script on current process
+		exec bash derby-startup
+		exit 0
+	else
+		echo "exiting pid[$$]..."		
+		exit 0
+	fi
+}
+
+echo "started on pid [$$]"
+cd $DERBY_HOME/lib
+java -jar ./derbyrun.jar server start
+sleep 2s
+echo "end of pid[$$]..."

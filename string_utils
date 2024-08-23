@@ -1,0 +1,147 @@
+#!/bin/bash
+
+
+
+##########
+# Get length of string
+# e.g:
+# echo $(lengthOf "codes.abdullah")
+# result: 14
+##########
+function lengthOf(){
+	local str=$1
+	if test -z $str; then echo 0; else echo ${#str};fi;
+}
+
+##########
+# Substring string based on range
+# e.g: 
+# echo $(substring "codes.abdullah" 2 4)
+# result: de
+##########
+function substring(){
+	local str=$1
+	local let from=$2;
+	local let to=$(($3-from));
+	if [ -z $str ]; then echo "Error: no string provided"; exit 1;fi
+	if test -z $from; then let from=0 local dummy=1; fi
+	if [ -z $to ]; then let to=$(lengthOf $str); fi;
+	echo ${str:from:to}
+}
+
+
+##########
+# Replace string based on range
+# e.g: 
+# echo $(replaceByRange "codes.abdullah" "JAVA" 2 4)
+# result: coJAVAs.abdullah
+##########
+function replaceByRange(){
+	local str=$1
+	local replacement=$2
+	local from=$3
+	local to=$4
+	#=============
+	if test -z $str; then echo "Error: no string provided"; exit 1;fi
+	#if test -z $replacement; then echo "Error: no replacement provided"; exit 1;fi
+	if test -z $from; then let from=0 local dummy=1; exit 1;fi
+	if test -z $to; then let to=$(lengthOf $str) local dummy=1;fi
+	if [ $from == $to ]; then echo "Error: from($from) == to($to)"; exit 1;fi
+	local len=$(lengthOf $str)		
+	if [ $from == 0 ]; then
+		echo "$replacement${str:to:len}"
+	elif [ $from -gt 0 ] && [ $to -lt $len ]; then
+		local left=${str:0:from}
+		local right=${str:to:len}
+		echo "$left$replacement$right"
+	else 
+		echo "${str:0:from}$replacement"
+	fi		
+}
+
+
+##########
+# Remove string based on range
+# e.g: 
+# echo $(replaceByRange "codes.abdullah" 2 4)
+# result: cos.abdullah
+##########
+function removeByRange(){
+	echo $(replaceByRange $1 "" $2 $3)
+}
+
+
+############
+# Index of string
+# $rest contains the part of $str after $find 
+# The starting position of the substring is therefore
+# the length of the whole string minus the length of the 
+# $rest minus the length of the $find itself.
+# e.g:
+# echo $(indexOf "codes.abdullah" "abd")
+# result: 6,  or -1 if not found
+##########
+function indexOf(){
+	local str=$1
+	local find=$2
+	rest=${str#*$find}
+	let result=$(( ${#str} - ${#rest} - ${#find} ))
+	if [[ $result -lt 0 ]]; then echo -1; else echo $result; fi
+}
+
+############
+# Substring after given string if found
+# e.g:
+# echo $(substringAfter "codes.abdullah" "abd")
+# result: ullah, or src input if not found
+##########
+function substringAfter(){
+	local str=$1
+	local find=$2
+	echo ${str#*$find}
+}
+
+
+############
+# Replace first occurrence only of regex by string 
+# e.g:
+# echo $(replaceAll "codes.abdullah.java" "[.]" "-")
+# result: "codes-abdullah-java"
+##########
+function replaceFirst(){
+	local str=$1
+	local regex=$2
+	local replacement=$3
+	echo "${str/$regex/"$replacement"}"  
+}
+
+############
+# Replace all occurrences of regex by string 
+# e.g:
+# echo $(replaceAll "codes.abdullah.java" "[.]" "-")
+# result: "codes-abdullah-java"
+##########
+function replaceAll(){
+	local str=$1
+	local regex=$2
+	local replacement=$3
+	echo "${str//$regex/$replacement}"  
+}
+
+
+
+
+#########
+# split an array is simple, so it is batter to do inline
+# bash does not supports return of arrays from functions
+# bad bash
+#########
+function split_deprecated(){
+	local str=$1
+	local regex=$2
+	arr=(${str//$regex/ })
+	
+}
+
+
+
