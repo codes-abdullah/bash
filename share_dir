@@ -39,7 +39,7 @@ for a in "${arr[@]}"; do
 		if [[ "$octal" -ne 7 && "$octal" -ne 5 ]]; then
 			echo "WAR: The '${g[i]}' octal permission '$octal' is invalid on the path-hierarchy of: $pp"
 			echo "WAR: The '${g[i]}' permission should be either '7' or '5' to gain path-hierarchy access"
-			echo "WAR: [Yes] to continue, [No] to abort, [C] to change permissions on current dir only, and [R] to change permissions on the entire path-hierarchy from ${pp:0:3} to 755"
+			echo -e "[Yes] to continue without changing it\n[No] to abort\n[C] to change permissions on current dir only\n[R] to change permissions on the entire path-hierarchy from ${pp:0:3} to 755"
 			while read -e yn; do
 			case $yn in
 				[Yy]es|[Yy]) break;;
@@ -72,12 +72,12 @@ case $2 in
 		fi
 
 		echo "==================="
-		smb_share="[$dir_name]\n
-			comment = Simple Share of $dir_name\n
-			path = $1\n
-			browsable = yes\n
-			guest ok = yes\n
-			read only = yes\n" 		
+		smb_share="[$dir_name]
+  comment = Simple Share of $dir_name
+  path = $path_to_share
+  browsable = yes
+  guest ok = yes
+  read only = yes" 		
 		echo -e $smb_share
 		echo "==================="
 		echo "LOG: Are you sure want to continue [yes/no]?"
@@ -103,9 +103,14 @@ case $2 in
 		fi
 		
 		
-		tmp_d=
-		tmp="/tmp/share_dir/`date +%s`.sh"
+		tmp_d=/tmp/share_dir
+		mkdir -p $tmp_d
+		tmp="$tmp_d/`date +%s`.sh"
+		echo "#!$BASH" >> $tmp
+		echo "echo -e \"$smb_share\" >> $smb_conf" >> $tmp
 		echo $tmp
+		chmod 777 $tmp
+		sudo $tmp
 		
 		#echo "LOG: Restarting services smbd.service and nmbd.service"
 		#sudo systemctl restart smbd.service nmbd.service
