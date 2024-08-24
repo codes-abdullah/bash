@@ -1,0 +1,13 @@
+#!/usr/bin/bash
+#################
+#This script will cheat Eclipse PyDev plugin to force it to use sudo privilages
+#################
+
+#Step1: Remove any interpreters from Eclipse
+
+
+#Step 2, uncomment below line and comment command on Step#3, then add this script file as interpreter to let pydev detect which python version and lib to import
+#/usr/bin/python3 "$@"
+
+#Step2, after importing this script in pydev with proper libs, comment Step#1 command, and uncommet below to activiate sudo privilages
+sudo -S /usr/bin/python3 "$@"
