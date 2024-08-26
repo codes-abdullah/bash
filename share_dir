@@ -23,7 +23,7 @@ fi
 source $LOCAL_BASH/file_utils
 
 smb_conf=/etc/samba/smb.conf
-ftp_conf=/etc/vsftp.conf
+ftp_conf=/etc/vsftpd.conf
 path_to_share=`resolveRelativePath "$1"`
 path_to_share=`echo "$path_to_share" | tr -s '/'`
 dir_name=`basename "$path_to_share"`
@@ -100,7 +100,11 @@ case $2 in
 		
 		if [[ ! -f "${smb_conf}_bkp" ]]; then
 			echo "LOG: Making backup for $smb_conf --> ${smb_conf}_bkp"
-			sudo cp /etc/samba/smb.conf /etc/samba/smb.conf_bkp
+			sudo cp "$smb_conf" "${smb_conf}_bkp"
+			if [[ $exitcode -ne 0 ]]; then
+				echo "backing-up $ftp_conf failed with exit code: $exitcode"
+				exit $exitcode
+			fi
 		fi
 		
 		
@@ -120,10 +124,59 @@ case $2 in
 	;;
 	
 	"ftp")
+			
+		ftp_share="
+allow_writeable_chroot=YES
+anon_mkdir_write_enable=YES
+anon_other_write_enable=YES
+anon_root=__PATH__
+anon_upload_enable=YES
+anon_world_readable_only=NO
+anonymous_enable=YES
+connect_from_port_20=YES
+dirmessage_enable=YES
+hide_ids=YES
+listen_ipv6=YES
+listen=NO
+local_enable=YES
+no_anon_password=YES
+nopriv_user=ftp
+pam_service_name=vsftpd
+pasv_max_port=50000
+pasv_min_port=40000
+rsa_cert_file=/etc/ssl/certs/ssl-cert-snakeoil.pem
+rsa_private_key_file=/etc/ssl/private/ssl-cert-snakeoil.key
+secure_chroot_dir=/var/run/vsftpd/empty
+ssl_enable=NO
+use_localtime=YES
+write_enable=YES
+xferlog_enable=YES		
+		"
+		
 		if [[ ! -f "${ftp_conf}_bkp" ]]; then
 			echo "LOG: Making backup for $ftp_conf --> ${fpt_conf}_bkp"
-			sudo cp /etc/vsftp.conf /etc/vsftp.conf_bkp
-		fi		
+			sudo cp "$ftp_conf" "${ftp_conf}_bkp"
+			exitcode=$?
+			if [[ $exitcode -ne 0 ]]; then
+				echo "backing-up $ftp_conf failed with exit code: $exitcode"
+				exit $exitcode
+			fi
+			
+		fi	
+		ftp_share="${ftp_share/__PATH__/$path_to_share}"
+		#sudo truncate -s0 "$smb_conf"
+		#echo "$ftp_share" > "$smb_conf"
+		
+		oct=`stat -c "%a" "$path_to_share"`
+		if [[ $oct -ne 777 ]]; then
+			echo "It's recomanded to apply read and write permissions to the share dir: $path_to_share"
+			read -p "Would you like to apply 777 permissions to it? [Y/n]: " -n1
+			if [[ "$REPLY" =~ [Yy] ]]; then 
+				sudo chmod 777 "$path_to_share"; 
+			fi
+			
+		fi
+		
 	;;
 	
 	"http")
