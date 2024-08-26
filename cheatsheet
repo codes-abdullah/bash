@@ -1,0 +1,22 @@
+
+
+
+
+
+
+########################## conditional utils
+#ternary operator
+[[ "$var" == "foo" ]] && echo "yes" || echo "no"
+
+#test regex pattern (pattern must be unqouted)
+[[ "$str" =~ pattern ]] && echo "match" || echo "not match"
+
+
+########################### harddesk utils
+#check harddesk free/used size
+df -h
+
+#test harddesk reading speed
+hdparam -t --direct /dev/XXX
+
+

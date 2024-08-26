@@ -1,0 +1,43 @@
+#!/usr/bin/bash
+
+########
+# Auther Abdullah Aldokhi
+# codes-abdullah@github.com
+########
+
+########
+# Simple confirmation tool with support for [Yy]/Enter and [Nn]/Escape
+# $1: prompt message
+# $2: invalid prompt message
+# $3: action type, [echo/exit], if echo, will echo "true/false", otherwise will exit on "false". by default will echo
+########
+
+DEFAULT_RESULT_ACTION="echo"
+DEFAULT_PROMPT_MSG="Do you want to continue? [Y/n]"
+DEFAULT_INVALID_PROMPT_MSG="Invalid input, use [Yy/Nn] or [Enter/Escape]"
+[[ $1 == "" ]] && PROMPT_MSG=$DEFAULT_PROMPT_MSG || PROMPT_MSG=$1
+[[ $2 == "" ]] && INVALID_PROMPT_MSG=$DEFAULT_INVALID_PROMPT_MSG || INVALID_PROMPT_MSG=$2
+[[ $3 == "" ]] && RESULT_ACTION=$DEFAULT_RESULT_ACTION || RESULT_ACTION=$3
+
+REPLY="no"
+echo $PROMPT_MSG
+# -s: do not echo input character.
+# -n 1: read only 1 character (separate with space)
+while read -s -n 1 key; do 
+	case $key in
+		#match pattern [yY] or if enter pressed
+		[yY] | "" ) REPLY="true"; break;;
+		#match pattern [nN] or if escape pressed
+		[nN] | $'\e' ) REPLY="false"; break;;
+		#anything else
+		*) echo "$INVALID_PROMPT_MSG, $PROMPT_MSG";;
+	esac
+done
+
+
+[[ $RESULT_ACTION == "echo" ]] && echo $REPLY || exit 0
+
+
+
+
+

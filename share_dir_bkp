@@ -23,7 +23,6 @@ fi
 source $LOCAL_BASH/file_utils
 
 smb_conf=/etc/samba/smb.conf
-ftp_conf=/etc/vsftp.conf
 path_to_share=`resolveRelativePath "$1"`
 path_to_share=`echo "$path_to_share" | tr -s '/'`
 dir_name=`basename "$path_to_share"`
@@ -120,10 +119,7 @@ case $2 in
 	;;
 	
 	"ftp")
-		if [[ ! -f "${ftp_conf}_bkp" ]]; then
-			echo "LOG: Making backup for $ftp_conf --> ${fpt_conf}_bkp"
-			sudo cp /etc/vsftp.conf /etc/vsftp.conf_bkp
-		fi		
+	
 	;;
 	
 	"http")
