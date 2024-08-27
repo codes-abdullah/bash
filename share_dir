@@ -66,6 +66,12 @@ done
 
 case $2 in
 	"smb")
+		which samba
+		if [[ $? -ne 0 ]]; then
+			echo "ERR: samba not installed, aborting"
+			exit 1
+		fi
+	
 		grep -oE "\[$dir_name\]" $smb_conf
 		if [[ $? -eq 0 ]]; then
 			echo "ERR: The given path already exists in $smb_conf, aborting.."
@@ -125,6 +131,13 @@ case $2 in
 	
 	"ftp")
 			
+			
+		which vsftpd
+		if [[ $? -ne 0 ]]; then
+			echo "ERR: vsftpd not installed, aborting"
+			exit 1
+		fi
+		
 		ftp_share="
 allow_writeable_chroot=YES
 anon_mkdir_write_enable=YES
@@ -164,19 +177,16 @@ xferlog_enable=YES
 			
 		fi	
 		ftp_share="${ftp_share/__PATH__/$path_to_share}"
-		#sudo truncate -s0 "$smb_conf"
-		#echo "$ftp_share" > "$smb_conf"
+		sudo echo "$ftp_share" > "$smb_conf"
 		
 		oct=`stat -c "%a" "$path_to_share"`
 		if [[ $oct -ne 777 ]]; then
 			echo "It's recomanded to apply read and write permissions to the share dir: $path_to_share"
-			read -p "Would you like to apply 777 permissions to it? [Y/n]: " -n1
-			if [[ "$REPLY" =~ [Yy] ]]; then 
-				sudo chmod 777 "$path_to_share"; 
-			fi
-			
+			read -p "You have to do it manually, press enter to continue..."			
 		fi
 		
+		
+		sudo systemctl restart vsftpd
 	;;
 	
 	"http")
