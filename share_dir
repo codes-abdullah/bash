@@ -85,7 +85,7 @@ case $2 in
   browsable = yes
   guest ok = yes
   read only = yes" 		
-		echo -e $smb_share
+		echo "$smb_share"
 		echo "==================="
 		echo "LOG: Are you sure want to continue [yes/no]?"
 		while read -e yn; do
@@ -123,8 +123,8 @@ case $2 in
 		chmod 777 $tmp
 		sudo $tmp
 		
-		#echo "LOG: Restarting services smbd.service and nmbd.service"
-		#sudo systemctl restart smbd.service nmbd.service
+		echo "LOG: Restarting services smbd.service and nmbd.service"
+		sudo systemctl restart smbd.service nmbd.service
 		
 		echo "done"
 	;;
@@ -177,11 +177,22 @@ xferlog_enable=YES
 			
 		fi	
 		ftp_share="${ftp_share/__PATH__/$path_to_share}"
-		sudo echo "$ftp_share" > "$smb_conf"
+		
+				
+		tmp_d=/tmp/share_dir
+		mkdir -p $tmp_d
+		tmp="$tmp_d/`date +%s`.sh"
+		echo "#!$BASH" >> $tmp
+		echo "echo -e \"$ftp_share\" > $ftp_conf" >> $tmp
+		echo $tmp
+		chmod 777 $tmp
+		sudo $tmp
+		
 		
 		oct=`stat -c "%a" "$path_to_share"`
 		if [[ $oct -ne 777 ]]; then
-			echo "It's recomanded to apply read and write permissions to the share dir: $path_to_share"
+			echo "$oct $path_to_share"
+			echo "It's recomanded to apply read and write permissions to the share dir"
 			read -p "You have to do it manually, press enter to continue..."			
 		fi
 		
