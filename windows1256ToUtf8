@@ -3,14 +3,19 @@
 
 
 function convert(){
-	file=$1	
+	file="$1"
 	if [[ -f $file ]]; then
-		echo "converting ${file}"	
+		dirname=`dirname "$file"`
 		fullName=$(basename -- "$file")
 		ext="${fullName##*.}"
 		name="${fullName%.*}"
-		if [[  $ext == "srt" ]]; then				
-			iconv -f WINDOWS-1256 -t UTF-8//TRANSLIT "${fullName}" -o "${name}-UTF8.srt"
+		if [[  $ext == "srt" ]]; then
+			echo "LOG: backup $file -> ${file}_bkp"
+			cp "$file" "${file}_bkp"
+			if [[ $? -ne 0 ]]; then echo "ERR: backup failed, aborting.."; exit 1; fi
+			echo "LOG: converting [${dirname}/${name}.srt]"
+			iconv -f WINDOWS-1256 -t UTF-8//TRANSLIT "${file}" -o "${dirname}/${name}.srt"
+			if [[ $? -ne 0 ]]; then echo "ERR: converting failed, aborting.."; exit 1; fi
 		fi
 	fi
 }
@@ -21,12 +26,12 @@ i=1;
 j=$#;
 while [ $i -le $j ] 
 do
-		if [[ -d $1 ]]; then
+		if [[ -d "$1" ]]; then
 		for file in $1/* ; do
-			convert $file
+			convert "$file"
 		done
 		elif [[ -f $1 ]]; then 	
-			convert $1
+			convert "$1"
 		fi    
     i=$((i + 1));
     shift 1;
