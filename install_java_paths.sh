@@ -1,10 +1,10 @@
 #!/bin/bash
 
 
-jdk_dir="/home/abod/.local/bin/jdk"
+jdk_dir="$HOME/.local/bin/jdk"
 linkpath="${jdk_dir}/default"
 echo "avilable jdk's in ${jdk_dir}"
-#========================
+#======================== scan for avilable jdks by numbers(e.g: 21)
 wild_dir="${jdk_dir}/*"
 let index=0
 declare -a arr
@@ -16,9 +16,10 @@ for path in $wild_dir; do
 	arr=(${arr[@]} "$dirname")
   fi  
 done
+ 
 #========================
 index=$((index-1))
-echo "choose a number or q to exit:"
+echo "choose an index or q to exit:"
 while read num
 do
 
@@ -39,6 +40,8 @@ do
 	break;
 	
 done < "${1:-/dev/stdin}"
+echo "selected $fullpath"
+
 #========================
 
 function continue_or_exit(){
@@ -55,7 +58,8 @@ function remove_link_if_exists(){
 	fi		
 }
 
-
+echo "======================"
+echo "======================"
 echo "======================"
 echo "symbolic linking?"
 echo "${linkpath} -> ${fullpath}"
@@ -65,3 +69,14 @@ remove_link_if_exists
 continue_or_exit
 ln -s "${fullpath}" "${linkpath}"
 
+echo -e "\n\n\n"
+echo "======================"
+echo "======================"
+echo "======================"
+echo "upadte alternatives??"
+echo -e "\nPress enter to continue or q to exit"
+echo "======================"
+continue_or_exit
+
+sudo update-alternatives --install "/usr/bin/java" "java" "${linkpath}/bin/java" 1
+sudo update-alternatives --install "/usr/bin/javac" "javac" "${linkpath}/bin/javac" 1
